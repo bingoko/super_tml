@@ -56,7 +56,7 @@ def opt_selection(model, opt=args.opt):
 
 
 def train_model(model_name='densenet121', opt='Adagrad', dataset='iris', writer=None, label_col_name=''):
-    train_loader, val_loader, test_loader = load_data(dataset, label_col_name)
+    train_loader, val_loader, test_loader = load_data(dataset, label_col_name=label_col_name)
 
     # Model selection
     model = load_model(model_name)
