@@ -24,29 +24,40 @@ def data2img(arr, font_size=50, resolution=(256, 256), font=cv2.FONT_HERSHEY_SIM
     frame = np.ones((*resolution, 3), np.uint8)*0
 
     k = 0
-    # ----- iris -----
-    if args.dataset=='iris':
-        for i in range(n_colums):
-            for j in range(n_lines):
-                try:
-                    cv2.putText(
-                        frame, str(arr[k]), (30+i*(x//n_colums), 5+(j+1)*(y//(n_lines+1))),
-                        fontFace=font, fontScale=1, color=(255, 255, 255), thickness=2)
-                    k += 1
-                except IndexError:
-                    break
 
-    # ----- wine -----
-    elif args.dataset=='wine':
-        for i in range(n_colums):
-            for j in range(n_lines):
-                try:
-                    cv2.putText(
-                        frame, str(arr[k]), (30+i*(x//n_colums), 5+(j+1)*(y//(n_lines+1))),
-                        fontFace=font, fontScale=0.4, color=(255, 255, 255), thickness=1)
-                    k += 1
-                except IndexError:
-                    break
+    for i in range(n_colums):
+        for j in range(n_lines):
+            try:
+                cv2.putText(
+                    frame, str(arr[k]), (30 + i * (x // n_colums), 5 + (j + 1) * (y // (n_lines + 1))),
+                    fontFace=font, fontScale=1, color=(255, 255, 255), thickness=2)
+                k += 1
+            except IndexError:
+                break
+
+    # ----- iris -----
+    # if args.dataset=='iris':
+    #     for i in range(n_colums):
+    #         for j in range(n_lines):
+    #             try:
+    #                 cv2.putText(
+    #                     frame, str(arr[k]), (30+i*(x//n_colums), 5+(j+1)*(y//(n_lines+1))),
+    #                     fontFace=font, fontScale=1, color=(255, 255, 255), thickness=2)
+    #                 k += 1
+    #             except IndexError:
+    #                 break
+    #
+    # # ----- wine -----
+    # elif args.dataset=='wine':
+    #     for i in range(n_colums):
+    #         for j in range(n_lines):
+    #             try:
+    #                 cv2.putText(
+    #                     frame, str(arr[k]), (30+i*(x//n_colums), 5+(j+1)*(y//(n_lines+1))),
+    #                     fontFace=font, fontScale=0.4, color=(255, 255, 255), thickness=1)
+    #                 k += 1
+    #             except IndexError:
+    #                 break
 
     return np.array(frame, np.uint8)
 
@@ -75,16 +86,21 @@ class CustomTensorDataset(Dataset):
 # ----- Load Data Pipeline -----
 
 
-def load_data(dataset=args.dataset, batch_size=args.batch_size, val_size=args.val_size, test_size=args.test_size, device='cpu'):
+def load_data(dataset=args.dataset, batch_size=args.batch_size, val_size=args.val_size, test_size=args.test_size, device='cpu', label_col_name=''):
     # load dataset
-    if dataset=='iris':
-        data = datasets.load_iris()
-    elif dataset=='wine':
-        data = datasets.load_wine()
+    # if dataset=='iris':
+    #     data = datasets.load_iris()
+    # elif dataset=='wine':
+    #     data = datasets.load_wine()
+
+    import pandas as pd
+    data = pd.read_csv(dataset)
+    datay = data.loc[:, label_col_name]
+    datax = data.drop(label_col_name, axis=1)
 
     # Split dataset -- Cross Vaidation
     x_train, x_test, y_train, y_test \
-        = train_test_split(data.data, data.target, test_size=test_size, random_state=1)
+        = train_test_split(datax, datay, test_size=test_size, random_state=1)
 
     x_train, x_val, y_train, y_val \
         = train_test_split(x_train, y_train, test_size=val_size, random_state=1)

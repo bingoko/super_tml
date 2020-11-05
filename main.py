@@ -38,7 +38,8 @@ def main():
         model_name  =   args.model,
         opt         =   args.opt,
         dataset     =   args.dataset,
-        writer      =   writer
+        writer      =   writer,
+        label_col_name = args.label
     )
     save_model(model)
 
