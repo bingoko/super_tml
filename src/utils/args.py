@@ -18,6 +18,8 @@ def parser():
 
     PARSER.add_argument('--dataset', default='iris', type=str,
                         help='Dataset.')
+    PARSER.add_argument('--label', default='', type=str,
+                        help='Label.')
     PARSER.add_argument('--model', default='densenet121', type=str,
                         choices=['resnet18', 'densenet121'], help='Model.')
     PARSER.add_argument('--opt', default='Adagrad', type=str,
