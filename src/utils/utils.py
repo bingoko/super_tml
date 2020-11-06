@@ -43,16 +43,16 @@ def save_model(model, pth='./src/models/trained_models/'):
 
 # ----- Logging -----
 
-def logging(epoch, train_stats, val_stats, writer):
+def logging(epoch, train_stats, writer):
     if writer is not None:
         for stat in train_stats:
             writer.add_scalar('Train/' + stat, train_stats[stat], epoch)
 
-        for stat in val_stats:
-            writer.add_scalar('Val/' + stat, val_stats[stat], epoch)
+        # for stat in val_stats:
+        #     writer.add_scalar('Val/' + stat, val_stats[stat], epoch)
 
-    print('Epoch [{:4d}/{:4d}] | Train Accuracy: {:4.2f} | Val Accuracy: {:4.2f}'.format(
-        epoch, args.epochs, train_stats['accuracy'], val_stats['accuracy']))
+    print('Epoch [{:4d}/{:4d}] | Train Accuracy: {:4.2f} '.format(
+        epoch, args.epochs, train_stats['accuracy']))
 
 
 # ----- Tensorboard Utils -----

@@ -98,13 +98,17 @@ def load_data(dataset=args.dataset, batch_size=args.batch_size, val_size=args.va
     datay = data.loc[:, label_col_name]
     datax = data.drop(label_col_name, axis=1)
 
+    datay = datay.to_numpy()
+    datax = datax.to_numpy()
+
     # Split dataset -- Cross Vaidation
     x_train, x_test, y_train, y_test \
         = train_test_split(datax, datay, test_size=test_size, random_state=1)
 
-    x_train, x_val, y_train, y_val \
-        = train_test_split(x_train, y_train, test_size=val_size, random_state=1)
+    # x_train, x_val, y_train, y_val \
+    #     = train_test_split(x_train, y_train, test_size=val_size, random_state=1)
 
+    nb_classes = len(np.unique(np.concatenate((y_train, y_test), axis=0)))
 
     # Dataset and Dataloader settings
     kwargs = {} if args.device=='cpu' else {'num_workers': 2, 'pin_memory': True}
@@ -118,15 +122,16 @@ def load_data(dataset=args.dataset, batch_size=args.batch_size, val_size=args.va
 
     # Build Dataset
     train_data = CustomTensorDataset(data=(x_train, y_train), transform=transform)
-    val_data   = CustomTensorDataset(data=(x_val, y_val), transform=transform)
+    # val_data   = CustomTensorDataset(data=(x_val, y_val), transform=transform)
     test_data  = CustomTensorDataset(data=(x_test, y_test), transform=transform)
 
     # Build Dataloader
     train_loader = DataLoader(train_data, shuffle=True, **loader_kwargs)
-    val_loader   = DataLoader(val_data, shuffle=True, **loader_kwargs)
+    # val_loader   = DataLoader(val_data, shuffle=True, **loader_kwargs)
     test_loader  = DataLoader(test_data, shuffle=False, **loader_kwargs)
 
-    return train_loader, val_loader, test_loader
+    # return train_loader, val_loader, test_loader
+    return train_loader, test_loader, nb_classes
 
 
 if __name__ == "__main__":

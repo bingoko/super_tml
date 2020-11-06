@@ -56,10 +56,11 @@ def opt_selection(model, opt=args.opt):
 
 
 def train_model(model_name='densenet121', opt='Adagrad', dataset='iris', writer=None, label_col_name=''):
-    train_loader, val_loader, test_loader = load_data(dataset, label_col_name=label_col_name)
+    # train_loader, val_loader, test_loader = load_data(dataset, label_col_name=label_col_name)
+    train_loader, test_loader, nb_classes = load_data(dataset, label_col_name=label_col_name)
 
     # Model selection
-    model = load_model(model_name)
+    model = load_model(model_name, nb_classes=nb_classes)
 
     # Optimizer
     optimizer = opt_selection(model, opt)
@@ -71,22 +72,25 @@ def train_model(model_name='densenet121', opt='Adagrad', dataset='iris', writer=
     for epoch in range(1, args.epochs+1):
         # Train and Validate
         train_stats = train_step(model, criterion, optimizer, train_loader)
-        valid_stats = valid_step(model, criterion, val_loader)
+        # valid_stats = valid_step(model, criterion, val_loader)
 
         # Logging
-        logging(epoch, train_stats, valid_stats, writer)
+        # logging(epoch, train_stats, valid_stats, writer)
+        logging(epoch, train_stats, writer)
 
         # Keep best model
-        if valid_stats['accuracy'] > best_val or (valid_stats['accuracy']==best_val and train_stats['accuracy']>=best_train):
+        if train_stats['accuracy']>=best_train:
             best_train  = train_stats['accuracy']
-            best_val    = valid_stats['accuracy']
+            # best_val    = valid_stats['accuracy']
             best_model_weights = copy.deepcopy(model.state_dict())
 
     # Load best model and evaluate on test set
     model.load_state_dict(best_model_weights)
     test_stats = valid_step(model, criterion, test_loader)
 
-    print('\nBests Model Accuracies: Train: {:4.2f} | Val: {:4.2f} | Test: {:4.2f}'.format(best_train, best_val, test_stats['accuracy']))
+    # print('\nBests Model Accuracies: Train: {:4.2f} | Val: {:4.2f} | Test: {:4.2f}'.format(best_train, best_val, test_stats['accuracy']))
+    print('\nBests Model Accuracies: Train: {:4.2f} | Test: {:4.2f}'.format(best_train,
+                                                                                           test_stats['accuracy']))
 
     return model
 
