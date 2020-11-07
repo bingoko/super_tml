@@ -44,6 +44,7 @@ class SuperTML(ClassifierMixin):
         self.batch_size = batch_size
         self.device = device
         self.epochs = epochs
+        self.best_model_weights = None
 
         # Model selection
         if self.base_model == 'resnet18':
@@ -107,7 +108,7 @@ class SuperTML(ClassifierMixin):
             raise NotImplementedError
         return optimizer
 
-    def _load_data(self, x_train, y_train=None):
+    def _load_data(self, X, y=None):
         # Dataset and Dataloader settings
         kwargs = {} if self.device == 'cpu' else {'num_workers': 2, 'pin_memory': True}
         loader_kwargs = {'batch_size': self.batch_size, **kwargs}
@@ -119,11 +120,11 @@ class SuperTML(ClassifierMixin):
         ])
 
         # Build Dataset
-        train_data = CustomTensorDataset(data=(x_train, y_train), transform=transform)
+        tensor_dataset = CustomTensorDataset(data=(X, y), transform=transform)
         # Build Dataloader
-        train_loader = DataLoader(train_data, shuffle=True, **loader_kwargs)
+        data_loader = DataLoader(tensor_dataset, shuffle=True, **loader_kwargs)
 
-        return train_loader
+        return data_loader
 
     def fit(self, X, y):
         train_loader = self._load_data(X, y)
@@ -171,9 +172,22 @@ class SuperTML(ClassifierMixin):
         for i, (x_imgs) in enumerate(val_loader):
             # forward pass
             x_imgs = x_imgs.to(self.device)
-            outputs = self.model(x_imgs)
-            _, preds = torch.max(outputs, 1)
+            probs = self.model(x_imgs)
+            _, preds = torch.max(probs, 1)
             all_preds.append(preds)
+        all_preds = torch.cat(all_preds, dim=0)
+        all_preds = all_preds.cpu().detach().numpy()
+        return all_preds
+
+    @torch.no_grad()
+    def _valid_step_prob(self, val_loader):
+        self.model.eval()
+        all_preds = []
+        for i, (x_imgs) in enumerate(val_loader):
+            # forward pass
+            x_imgs = x_imgs.to(self.device)
+            probs = self.model(x_imgs)
+            all_preds.append(probs)
         all_preds = torch.cat(all_preds, dim=0)
         all_preds = all_preds.cpu().detach().numpy()
         return all_preds
@@ -181,5 +195,11 @@ class SuperTML(ClassifierMixin):
     def predict(self, X):
         # Load best model and evaluate on test set
         self.model.load_state_dict(self.best_model_weights)
-        test_loader = self._load_data(X, None)
+        test_loader = self._load_data(X)
         return self._valid_step(test_loader)
+
+    def predict_proba(self, X):
+        self.model.load_state_dict(self.best_model_weights)
+        test_loader = self._load_data(X)
+        return self._valid_step_prob(test_loader)
+

@@ -56,13 +56,15 @@ def main():
     pipeline_scores_data = cross_validate(model,
                                           x_train,
                                           y_train,
-                                          cv=5,
+                                          cv=2,
                                           return_estimator=True,
                                           error_score='raise')
     print('pipeline_scores_data', pipeline_scores_data)
 
     model.fit(X=x_train, y=y_train)
     pred = model.predict(X=x_test)
+    prob = model.predict_proba(X=x_test)
+    print(prob)
     from sklearn.metrics import log_loss, accuracy_score, mean_squared_error
     score = accuracy_score(y_test, pred)
     print(score)
