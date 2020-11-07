@@ -15,7 +15,6 @@ Reposetory Author:
     Ioannis Gatopoulos, 2020
 """
 
-
 from datetime import datetime
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -25,13 +24,14 @@ from src.opt.training_pipeline import train_model
 from sklearn.model_selection import train_test_split
 from src.super_tml import SuperTML
 
+from sklearn.model_selection import cross_validate
 def main():
     fix_random_seed(seed=args.seed)
 
     # Eneble TensorBoard logs
     writer = SummaryWriter(log_dir='./logs/' +
-                           args.dataset + '_' + args.tags +
-                           datetime.now().strftime("/%d-%m-%Y/%H-%M-%S"))
+                                   args.dataset + '_' + args.tags +
+                                   datetime.now().strftime("/%d-%m-%Y/%H-%M-%S"))
     writer.add_text('args', namespace2markdown(args))
 
     data = pd.read_csv(args.dataset)
@@ -47,14 +47,28 @@ def main():
     nb_classes = len(np.unique(np.concatenate((y_train, y_test), axis=0)))
 
     model = SuperTML(nb_classes=nb_classes,
-                 base_model = 'resnet18',
-                 optimiser = 'Adagrad',
-                 batch_size = 16,
-                 device='cpu')
+                     base_model='resnet18',
+                     optimiser='Adagrad',
+                     batch_size=16,
+                     device='cpu',
+                     epochs=10)
+
+    pipeline_scores_data = cross_validate(model,
+                                          x_train,
+                                          y_train,
+                                          cv=5,
+                                          return_estimator=True,
+                                          error_score='raise')
+    print('pipeline_scores_data', pipeline_scores_data)
+
     model.fit(X=x_train, y=y_train)
+    pred = model.predict(X=x_test)
+    from sklearn.metrics import log_loss, accuracy_score, mean_squared_error
+    score = accuracy_score(y_test, pred)
+    print(score)
 
     writer.close()
-    print('\n'+24*'='+' Experiment Ended '+24*'='+'\n')
+    print('\n' + 24 * '=' + ' Experiment Ended ' + 24 * '=' + '\n')
 
 
 if __name__ == "__main__":

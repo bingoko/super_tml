@@ -78,8 +78,12 @@ class CustomTensorDataset(Dataset):
         if self.transform:
             x = self.transform(img)
 
-        y = self.data[1][index]
-        return x, y
+        if self.data[1] is not None:
+            y = self.data[1][index]
+            return x, y
+        else:
+            return x
+
 
 
 
