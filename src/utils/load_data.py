@@ -84,6 +84,31 @@ class CustomTensorDataset(Dataset):
 
 
 # ----- Load Data Pipeline -----
+def load_dataset(x_train, y_train, batch_size, device):
+    nb_classes = len(np.unique(y_train, axis=0))
+
+    # Dataset and Dataloader settings
+    kwargs = {} if device == 'cpu' else {'num_workers': 2, 'pin_memory': True}
+    loader_kwargs = {'batch_size': batch_size, **kwargs}
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
+    ])
+
+    # Build Dataset
+    train_data = CustomTensorDataset(data=(x_train, y_train), transform=transform)
+    # val_data   = CustomTensorDataset(data=(x_val, y_val), transform=transform)
+    # test_data = CustomTensorDataset(data=(x_test, y_test), transform=transform)
+
+    # Build Dataloader
+    train_loader = DataLoader(train_data, shuffle=True, **loader_kwargs)
+    # val_loader   = DataLoader(val_data, shuffle=True, **loader_kwargs)
+    # test_loader = DataLoader(test_data, shuffle=False, **loader_kwargs)
+
+    # return train_loader, val_loader, test_loader
+    return train_loader, nb_classes
 
 
 def load_data(dataset=args.dataset, batch_size=args.batch_size, val_size=args.val_size, test_size=args.test_size, device='cpu', label_col_name=''):

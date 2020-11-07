@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from src.utils import args, load_data, logging
+from src.utils import args, load_data, logging, load_dataset
 from src.models import load_model
 
 
@@ -53,6 +53,38 @@ def opt_selection(model, opt=args.opt):
         raise NotImplementedError
     return optimizer
 
+def fit(x_train, y_train, batch_size, device, model_name='densenet121', opt='Adagrad', dataset='iris', writer=None, label_col_name=''):
+    # train_loader, val_loader, test_loader = load_data(dataset, label_col_name=label_col_name)
+    train_loader, nb_classes = load_dataset(x_train, y_train, batch_size, device)
+
+    # Model selection
+    model = load_model(model_name, nb_classes=nb_classes)
+
+    # Optimizer
+    optimizer = opt_selection(model, opt)
+
+    # Loss Criterion
+    criterion = nn.CrossEntropyLoss()
+
+    best_train = 0.0, 0.0
+    for epoch in range(1, args.epochs + 1):
+        # Train and Validate
+        train_stats = train_step(model, criterion, optimizer, train_loader)
+        # Logging
+        logging(epoch, train_stats, writer)
+
+        # Keep best model
+        if train_stats['accuracy'] >= best_train:
+            best_train = train_stats['accuracy']
+            best_model_weights = copy.deepcopy(model.state_dict())
+
+    # Load best model and evaluate on test set
+    model.load_state_dict(best_model_weights)
+
+    # print('\nBests Model Accuracies: Train: {:4.2f} | Val: {:4.2f} | Test: {:4.2f}'.format(best_train, best_val, test_stats['accuracy']))
+    print('\nBests Model Accuracies: Train: {:4.2f}'.format(best_train))
+
+    return model
 
 
 def train_model(model_name='densenet121', opt='Adagrad', dataset='iris', writer=None, label_col_name=''):
