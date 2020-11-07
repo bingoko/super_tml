@@ -54,7 +54,7 @@ class SuperTML(ClassifierMixin):
             self.model = models.densenet121(pretrained=True)
             self.model.classifier = nn.Linear(1024, nb_classes)
 
-        if self.device == 'gpu':
+        if self.device == 'cuda':
             self.model = nn.DataParallel(self.model.to(device))
 
     def get_params(self, deep=True):
