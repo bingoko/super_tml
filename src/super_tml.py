@@ -119,7 +119,7 @@ class SuperTML(ClassifierMixin):
         for i, (x_imgs, labels) in enumerate(train_loader):
             optimizer.zero_grad()
             # forward pass
-            x_imgs, labels = x_imgs.to(args.device), labels.to(args.device)
+            x_imgs, labels = x_imgs.to(self.device), labels.to(self.device)
             probs = self.model(x_imgs)
             loss = criterion(probs, labels)
             # back-prop
