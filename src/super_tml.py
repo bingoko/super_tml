@@ -113,7 +113,7 @@ class SuperTML(ClassifierMixin):
         # Build Dataset
         tensor_dataset = CustomTensorDataset(data=(X, y), transform=transform)
         # Build Dataloader
-        data_loader = DataLoader(tensor_dataset, shuffle=True, **loader_kwargs)
+        data_loader = DataLoader(tensor_dataset, shuffle=False, **loader_kwargs)
 
         return data_loader
 
