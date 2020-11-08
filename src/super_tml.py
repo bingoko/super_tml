@@ -6,27 +6,16 @@ This file defines a sklearn compatible interface for nn_builder.
 
 # ───────────────────────────────── imports ────────────────────────────────── #
 # Standard Library
-import numpy as np
-import tensorflow as tf
-from scipy.special import softmax
-from sklearn.base import ClassifierMixin, RegressorMixin
-import torch.nn as nn
+from sklearn.base import ClassifierMixin
 from torchvision import models
 import copy
-import numpy as np
-import torch
 import torch.nn as nn
-import numpy as np
-import sklearn.datasets as datasets
-from sklearn.model_selection import train_test_split
-import cv2
 import torch
 from torchvision import transforms
-from torch.utils.data import DataLoader, Dataset, TensorDataset
+from torch.utils.data import DataLoader
 # ---------------------------------------------------------------------------- #
 
-from src.utils import args, load_data, logging, load_dataset
-from src.utils.load_data import CustomTensorDataset, data2img
+from src.utils.load_data import CustomTensorDataset
 
 
 class SuperTML(ClassifierMixin):
@@ -36,7 +25,8 @@ class SuperTML(ClassifierMixin):
                  optimiser: str = 'Adagrad',
                  batch_size: int = 16,
                  device: str = 'cpu',
-                 epochs: int = 10
+                 epochs: int = 10,
+                 best_model_weights=None
                  ):
         self.nb_classes = nb_classes
         self.base_model = base_model
@@ -44,19 +34,22 @@ class SuperTML(ClassifierMixin):
         self.batch_size = batch_size
         self.device = device
         self.epochs = epochs
-        self.best_model_weights = None
+        self.best_model_weights = best_model_weights
 
+        self.model_init()
+
+    def model_init(self):
         # Model selection
         if self.base_model == 'resnet18':
             self.model = models.resnet18(pretrained=True)
             num_features = self.model.fc.in_features
-            self.model.fc = nn.Linear(num_features, nb_classes)
+            self.model.fc = nn.Linear(num_features, self.nb_classes)
         elif self.base_model == 'densenet121':
             self.model = models.densenet121(pretrained=True)
-            self.model.classifier = nn.Linear(1024, nb_classes)
+            self.model.classifier = nn.Linear(1024, self.nb_classes)
 
         if self.device == 'cuda':
-            self.model = nn.DataParallel(self.model.to(device))
+            self.model = nn.DataParallel(self.model.to(self.device))
 
     def get_params(self, deep=True):
         return {'nb_classes': self.nb_classes,
@@ -64,24 +57,22 @@ class SuperTML(ClassifierMixin):
                 'optimiser': self.optimiser,
                 'batch_size': self.batch_size,
                 'device': self.device,
-                'epochs': self.epochs}
+                'epochs': self.epochs,
+                'best_model_weights': self.best_model_weights
+                }
 
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
             setattr(self, parameter, value)
 
-        self.model = SuperTML(nb_classes=self.nb_classes,
-                              base_model=self.base_model,
-                              optimiser=self.optimiser,
-                              batch_size=self.batch_size,
-                              device=self.device,
-                              epochs=self.epochs)
+        self.model_init()
 
         return self
 
     def __repr__(self, N_CHAR_MAX=700):
         the_class = 'super_tml'
         init_params = self.get_params()
+        init_params.pop('best_model_weights')
         signature = []
         for k, v in init_params.items():
             signature.append(k + '=' + str(v))
