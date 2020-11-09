@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 """
-This file defines a sklearn compatible interface for nn_builder.
+This file defines a sklearn compatible interface for SuperTML.
+https://arxiv.org/pdf/1903.06246.pdf
 """
 
 # ───────────────────────────────── imports ────────────────────────────────── #
@@ -70,7 +71,7 @@ class SuperTML(ClassifierMixin):
         return self
 
     def __repr__(self, N_CHAR_MAX=700):
-        the_class = 'super_tml'
+        the_class = 'SuperTML'
         init_params = self.get_params()
         init_params.pop('best_model_weights')
         signature = []
@@ -128,7 +129,7 @@ class SuperTML(ClassifierMixin):
 
         best_train = 0.0
         epochs = self.epochs + 1
-        for epoch in range(1, epochs):
+        for epoch in range(epochs):
             # Train and Validate
             train_stats = self._train_step(optimizer, train_loader)
             print(train_stats)
