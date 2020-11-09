@@ -16,11 +16,9 @@ Reposetory Author:
 """
 
 from datetime import datetime
-import torch
 from torch.utils.tensorboard import SummaryWriter
 import pandas as pd
 from src.utils import *
-from src.opt.training_pipeline import train_model
 from sklearn.model_selection import train_test_split
 from src.super_tml import SuperTML
 
@@ -43,15 +41,15 @@ def main():
 
     # Split dataset -- Cross Vaidation
     x_train, x_test, y_train, y_test \
-        = train_test_split(datax, datay, test_size=0.3, random_state=1)
+        = train_test_split(datax, datay, test_size=args.test_size, random_state=1)
     nb_classes = len(np.unique(np.concatenate((y_train, y_test), axis=0)))
 
     model = SuperTML(nb_classes=nb_classes,
-                     base_model='resnet18',
-                     optimiser='Adagrad',
-                     batch_size=16,
-                     device='cpu',
-                     epochs=10)
+                     base_model=args.model,
+                     optimiser=args.opt,
+                     batch_size=args.batch_size,
+                     device=args.device,
+                     epochs=args.epochs)
 
     pipeline_scores_data = cross_validate(model,
                                           x_train,
